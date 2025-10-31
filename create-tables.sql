@@ -242,7 +242,7 @@ CREATE INDEX IX_TAXES_building_unit
 GO
 
 -- ==============================================================
--- 10) UTILITIES (With Flexible FK References)
+-- 10) UTILITIES (Fixed - No Cascade Cycle)
 -- ==============================================================
 IF OBJECT_ID('pm.UTILITIES','U') IS NOT NULL
     DROP TABLE pm.UTILITIES;
@@ -276,10 +276,12 @@ CREATE TABLE pm.UTILITIES
     
     CONSTRAINT FK_Utilities_Upper FOREIGN KEY (building_no_upper, unit_number_upper)
         REFERENCES pm.PROPERTIES(building_no, unit_number)
-        ON UPDATE CASCADE ON DELETE SET NULL,
+        ON UPDATE NO ACTION 
+        ON DELETE NO ACTION,  -- Changed from CASCADE
     CONSTRAINT FK_Utilities_Lower FOREIGN KEY (building_no_lower, unit_number_lower)
         REFERENCES pm.PROPERTIES(building_no, unit_number)
-        ON UPDATE CASCADE ON DELETE SET NULL
+        ON UPDATE NO ACTION 
+        ON DELETE NO ACTION   -- Changed from CASCADE
 );
 GO
 CREATE INDEX IX_UTILITIES_building_code
