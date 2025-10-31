@@ -473,3 +473,25 @@ GO
 CREATE INDEX IX_INSPECTION_ISSUES_building_unit
     ON pm.INSPECTION_ISSUES(building_no, unit_number);
 GO
+
+-- ==============================================================
+-- 18) BC SPECULATION TAX NOTICES (Denormalized - Matches Excel)
+-- ==============================================================
+IF OBJECT_ID('pm.BC_SPECULATION_NOTICES','U') IS NOT NULL
+    DROP TABLE pm.BC_SPECULATION_NOTICES;
+GO
+CREATE TABLE pm.BC_SPECULATION_NOTICES
+(
+    notice_id INT IDENTITY(1,1) PRIMARY KEY,
+    building_no NVARCHAR(50) NOT NULL,
+    owner_name NVARCHAR(255),
+    owner_email_1 NVARCHAR(255),
+    owner_email_2 NVARCHAR(255),
+    notice_2025 NVARCHAR(500),  -- Can be NULL or contain notes
+    notice_2024 NVARCHAR(500),  -- Can be NULL or contain notes
+    notice_2023 NVARCHAR(500)   -- Can be NULL or contain notes
+);
+GO
+CREATE INDEX IX_BC_SPECULATION_building
+    ON pm.BC_SPECULATION_NOTICES(building_no);
+GO
