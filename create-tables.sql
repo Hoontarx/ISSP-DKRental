@@ -138,7 +138,8 @@ CREATE TABLE pm.BC_ASSESSMENTS
     assessed_value DECIMAL(12,2),
     CONSTRAINT FK_BC_Assessments_Properties FOREIGN KEY (building_no, unit_number)
         REFERENCES pm.PROPERTIES(building_no, unit_number)
-        ON UPDATE CASCADE ON DELETE CASCADE
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT UQ_BC_Assessments UNIQUE (building_no, unit_number, [year])
 );
 GO
 CREATE INDEX IX_BC_ASSESSMENTS_building_unit_year
@@ -241,7 +242,7 @@ CREATE INDEX IX_TAXES_building_unit
 GO
 
 -- ==============================================================
--- 10) UTILITIES
+-- 10) UTILITIES (With Flexible FK References)
 -- ==============================================================
 IF OBJECT_ID('pm.UTILITIES','U') IS NOT NULL
     DROP TABLE pm.UTILITIES;
@@ -249,27 +250,50 @@ GO
 CREATE TABLE pm.UTILITIES
 (
     utility_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
-    upper_or_lower NVARCHAR(50),
-    percent_split DECIMAL(5,2),
-    bc_hydro DECIMAL(10,2),
-    fortis_bc DECIMAL(10,2),
-    CONSTRAINT FK_Utilities_Properties FOREIGN KEY
-    (building_no, unit_number)
-        REFERENCES pm.PROPERTIES
-    (building_no, unit_number)
-        ON
-    UPDATE CASCADE ON
-    DELETE CASCADE
+    building_code NVARCHAR(50) NOT NULL,  -- 'B2350' from Excel (for reference only)
+    
+    -- Upper/Main Unit FK
+    building_no_upper NVARCHAR(50) NULL,
+    unit_number_upper NVARCHAR(50) NULL,
+    tenant_name_upper NVARCHAR(150),
+    split_percent_upper DECIMAL(5,2),
+    bc_hydro_upper DECIMAL(10,2),
+    fortis_bc_upper DECIMAL(10,2),
+    total_upper DECIMAL(10,2),
+    
+    -- Lower/Basement Unit FK
+    building_no_lower NVARCHAR(50) NULL,
+    unit_number_lower NVARCHAR(50) NULL,
+    tenant_name_lower NVARCHAR(150),
+    split_percent_lower DECIMAL(5,2),
+    bc_hydro_lower DECIMAL(10,2),
+    fortis_bc_lower DECIMAL(10,2),
+    total_lower DECIMAL(10,2),
+    
+    -- Owner
+    split_percent_owner DECIMAL(5,2),
+    owner_total DECIMAL(10,2),
+    
+    CONSTRAINT FK_Utilities_Upper FOREIGN KEY (building_no_upper, unit_number_upper)
+        REFERENCES pm.PROPERTIES(building_no, unit_number)
+        ON UPDATE CASCADE ON DELETE SET NULL,
+    CONSTRAINT FK_Utilities_Lower FOREIGN KEY (building_no_lower, unit_number_lower)
+        REFERENCES pm.PROPERTIES(building_no, unit_number)
+        ON UPDATE CASCADE ON DELETE SET NULL
 );
 GO
-CREATE INDEX IX_UTILITIES_building_unit
-    ON pm.UTILITIES(building_no, unit_number);
+CREATE INDEX IX_UTILITIES_building_code
+    ON pm.UTILITIES(building_code);
+GO
+CREATE INDEX IX_UTILITIES_upper
+    ON pm.UTILITIES(building_no_upper, unit_number_upper);
+GO
+CREATE INDEX IX_UTILITIES_lower
+    ON pm.UTILITIES(building_no_lower, unit_number_lower);
 GO
 
 -- ==============================================================
--- 11) MOVE IN / OUT
+-- 11) MOVE IN / OUT 
 -- ==============================================================
 IF OBJECT_ID('pm.MOVE_IN_OUT','U') IS NOT NULL
     DROP TABLE pm.MOVE_IN_OUT;
@@ -277,11 +301,8 @@ GO
 CREATE TABLE pm.MOVE_IN_OUT
 (
     move_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
-    tenant_id INT NULL,
-    move_type NVARCHAR(50),
-    tenant_name NVARCHAR(150),
+    tenant_id INT NOT NULL,
+    move_type NVARCHAR(50),  -- 'Move In' or 'Move Out'
     move_date DATE,
     tenant_availability NVARCHAR(50),
     proposed_date_tbc BIT,
@@ -293,13 +314,16 @@ CREATE TABLE pm.MOVE_IN_OUT
     move_in_orientation BIT,
     form_k BIT,
     zinspector NVARCHAR(100),
-    CONSTRAINT FK_MoveInOut_Properties FOREIGN KEY (building_no, unit_number)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
+    CONSTRAINT FK_MoveInOut_Tenants FOREIGN KEY (tenant_id)
+        REFERENCES pm.TENANTS(tenant_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 GO
-CREATE INDEX IX_MOVEINOUT_building_unit
-    ON pm.MOVE_IN_OUT(building_no, unit_number);
+CREATE INDEX IX_MOVEINOUT_tenant_id
+    ON pm.MOVE_IN_OUT(tenant_id);
+GO
+CREATE INDEX IX_MOVEINOUT_move_date
+    ON pm.MOVE_IN_OUT(move_date);  
 GO
 
 -- ==============================================================
