@@ -617,53 +617,7 @@ CREATE INDEX IX_KEYSFOBS_building_unit
 GO
 
 -- ==============================================================
--- 15) TENANT INSURANCE (Corrected)
--- ==============================================================
-IF OBJECT_ID('pm.TENANT_INSURANCE','U') IS NOT NULL
-    DROP TABLE pm.TENANT_INSURANCE;
-GO
-CREATE TABLE pm.TENANT_INSURANCE
-(
-    insurance_id INT IDENTITY(1,1) PRIMARY KEY,
-    tenant_id INT NOT NULL,
-    policy_number NVARCHAR(100),
-    start_date DATE,
-    end_date DATE,
-    remarks NVARCHAR(255),
-    CONSTRAINT FK_TenantInsurance_Tenants FOREIGN KEY (tenant_id)
-        REFERENCES pm.TENANTS(tenant_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
-);
-GO
-CREATE INDEX IX_TENANT_INSURANCE_tenant_id
-    ON pm.TENANT_INSURANCE(tenant_id);
-GO
-
--- ==============================================================
--- 16) OWNER INSURANCE (Corrected)
--- ==============================================================
-IF OBJECT_ID('pm.OWNER_INSURANCE','U') IS NOT NULL
-    DROP TABLE pm.OWNER_INSURANCE;
-GO
-CREATE TABLE pm.OWNER_INSURANCE
-(
-    insurance_id INT IDENTITY(1,1) PRIMARY KEY,
-    owner_id INT NOT NULL,
-    insurance_number NVARCHAR(100),
-    start_date DATE,
-    end_date DATE,
-    remarks NVARCHAR(255),
-    CONSTRAINT FK_OwnerInsurance_Owners FOREIGN KEY (owner_id)
-        REFERENCES pm.OWNERS(owner_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
-);
-GO
-CREATE INDEX IX_OWNER_INSURANCE_owner_id
-    ON pm.OWNER_INSURANCE(owner_id);
-GO
-
--- ==============================================================
--- 17) INSPECTION ISSUES (Finalized Design)
+-- 17) INSPECTION 
 -- ==============================================================
 IF OBJECT_ID('pm.INSPECTION_ISSUES','U') IS NOT NULL
     DROP TABLE pm.INSPECTION_ISSUES;
