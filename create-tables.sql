@@ -266,8 +266,8 @@ GO
 
 CREATE TABLE pm.RENT
 (
-    rent_id INT IDENTITY(1,1) PRIMARY KEY,       -- PK
-    property_id INT NOT NULL,                     -- FK to PROPERTIES
+    rent_id INT IDENTITY(1,1) PRIMARY KEY,       
+    property_id INT NOT NULL,                     
     rent_year INT NOT NULL,
     rent_amount DECIMAL(10,2),
     effective_date DATE NOT NULL,
@@ -369,7 +369,6 @@ CREATE TABLE pm.INSPECTION_ISSUES
     status NVARCHAR(50),
     date_logged DATETIME DEFAULT GETDATE(),
 
-    -- Foreign key
     CONSTRAINT FK_INSPECTION_ISSUES_INSPECTION FOREIGN KEY (inspection_id)
         REFERENCES pm.INSPECTIONS(inspection_id)
 );
@@ -436,18 +435,17 @@ GO
 CREATE TABLE pm.TAXES
 (
     tax_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
+    property_id INT,
     municipal_eht DECIMAL(10,2),
     bc_speculation_tax DECIMAL(10,2),
     federal_uht DECIMAL(10,2),
-    CONSTRAINT FK_Taxes_Properties FOREIGN KEY (building_no, unit_number)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
+    CONSTRAINT FK_TAX_PROPERTY FOREIGN KEY (property_id)  
+        REFERENCES pm.PROPERTIES(property_id)  
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 GO
 CREATE INDEX IX_TAXES_building_unit
-    ON pm.TAXES(building_no, unit_number);
+    ON pm.TAXES(property_id);
 GO
 
 -- ==============================================================
@@ -459,49 +457,56 @@ GO
 CREATE TABLE pm.UTILITIES
 (
     utility_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_code NVARCHAR(50) NOT NULL,  -- 'B2350' from Excel (for reference only)
     
-    -- Upper/Main Unit FK
-    building_no_upper NVARCHAR(50) NULL,
-    unit_number_upper NVARCHAR(50) NULL,
-    tenant_name_upper NVARCHAR(150),
-    split_percent_upper DECIMAL(5,2),
-    bc_hydro_upper DECIMAL(10,2),
-    fortis_bc_upper DECIMAL(10,2),
-    total_upper DECIMAL(10,2),
-    
-    -- Lower/Basement Unit FK
-    building_no_lower NVARCHAR(50) NULL,
-    unit_number_lower NVARCHAR(50) NULL,
-    tenant_name_lower NVARCHAR(150),
-    split_percent_lower DECIMAL(5,2),
-    bc_hydro_lower DECIMAL(10,2),
-    fortis_bc_lower DECIMAL(10,2),
-    total_lower DECIMAL(10,2),
-    
-    -- Owner
-    split_percent_owner DECIMAL(5,2),
-    owner_total DECIMAL(10,2),
-    
-    CONSTRAINT FK_Utilities_Upper FOREIGN KEY (building_no_upper, unit_number_upper)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
-        ON UPDATE NO ACTION 
-        ON DELETE NO ACTION,  -- Changed from CASCADE
-    CONSTRAINT FK_Utilities_Lower FOREIGN KEY (building_no_lower, unit_number_lower)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
-        ON UPDATE NO ACTION 
-        ON DELETE NO ACTION   -- Changed from CASCADE
+    property_id INT,
+    utype_id INT,
+    total_amount DECIMAL(10,2),
+
+    CONSTRAINT FK_PROPERTY_UTILITIEs FOREIGN KEY(property_id)
+        REFERENCES pm.property(property_id),
+    CONSTRAINT FK_UTYPE_UTILITIEs FOREIGN KEY(utype_id)
+        REFERENCES pm.UTILITY_TYPE(utype_id)
 );
 GO
-CREATE INDEX IX_UTILITIES_building_code
-    ON pm.UTILITIES(building_code);
+IF OBJECT_ID('pm.UTILITY_TYPE','U') IS NOT NULL
+    DROP TABLE pm.UTILITY_TYPE;
 GO
-CREATE INDEX IX_UTILITIES_upper
-    ON pm.UTILITIES(building_no_upper, unit_number_upper);
+CREATE TABLE pm.UTILITY_TYPE
+(
+    utype_id INT IDENTITY(1,1),
+    utility_name VARCHAR(25)
+);
+
+IF OBJECT_ID('pm.UTILITY_SPLIT', 'U') IS NOT NULL
+    DROP TABLE pm.UTILITY_SPLIT;
 GO
-CREATE INDEX IX_UTILITIES_lower
-    ON pm.UTILITIES(building_no_lower, unit_number_lower);
+
+CREATE TABLE pm.UTILITY_SPLIT
+(
+    split_id INT IDENTITY(1,1) PRIMARY KEY,
+    payer_id INT NOT NULL,
+    utility_id INT NOT NULL,
+    percentage DECIMAL(5,2) NOT NULL,
+    amount AS (total_amount * percentage / 100.0) PERSISTED,
+    
+    CONSTRAINT FK_UTILITY_SPLIT_PAYER
+    FOREIGN KEY (payer_id) REFERENCES pm.UTILITY_PAYER(payer_id),
+
+    CONSTRAINT FK_UTILITY_SPLIT_UTILITY
+    FOREIGN KEY (utility_id) REFERENCES pm.UTILITIES(utility_id)
+
+);
+
+
+IF OBJECT_ID('pm.UTILITY_PAYER','U') IS NOT NULL
+    DROP TABLE pm.UTILITY_PAYER;
 GO
+CREATE TABLE pm.UTILITY_PAYER
+(
+    payer_id INT IDENTITY(1,1) PRIMARY KEY,
+    payer VARCHAR(6)
+);
+
 
 -- ==============================================================
 -- 11) MOVE IN / OUT 
