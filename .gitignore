@@ -1,0 +1,54 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.log
+
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+VENV/
+pip-wheel-metadata/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Local settings / credentials
+*.env
+.env.*
+secrets.json
+config.json
+
+# --- CSV / Excel / Data ---
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.ods
+
+# --- VS Code / Editor ---
+.vscode/
+*.code-workspace
+.idea/
+*.swp
+*.swo
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Output / temp files ---
+*.bak
+*.tmp
+*.log
+*.out
+*.err
+
+# --- Custom (local imports / scripts) ---
+import_csv_to_sql.py
+test_*.py
