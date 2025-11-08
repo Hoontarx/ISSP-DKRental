@@ -1,5 +1,6 @@
 # Core Hierarchy
 
+```
 PROVINCE
    ↓
 CITY
@@ -7,9 +8,11 @@ CITY
 PROPERTY_TYPE
    ↓
 PROPERTIES
+```
 
 # Ownership & Care
 
+```
 CARE_OF
    ↓
 OWNERS
@@ -17,9 +20,11 @@ OWNERS
 OWNERSHIP → PROPERTIES
    ↓
 OWNER_INSURANCE → PROPERTIES
+```
 
 # Tenancy System
 
+```
 TENANT_INSURANCE
    ↓
 TENANCY → PROPERTIES
@@ -29,32 +34,40 @@ TENANTS → TENANCY
 MOVE_TYPE
    ↓
 MOVE → TENANCY
+```
 
 # Inspections & Issues
 
+```
 INSPECTIONS_TYPE
    ↓
 INSPECTIONS → PROPERTIES
    ↓
 INSPECTION_ISSUES → INSPECTIONS
+```
 
 # Utilities
 
+```
 UTILITY_TYPE
 UTILITY_PAYER
    ↓
 UTILITIES → PROPERTIES
    ↓
 UTILITY_SPLIT → (UTILITIES + UTILITY_PAYER)
+```
 
 # Maintenance & Contractors
 
+```
 CONTRACTORS
    ↓
 MAINTENANCE → (PROPERTIES + CONTRACTORS)
+```
 
 # Taxes & Assessments
 
+```
 PROPERTIES
    ↓
 BC_ASSESSMENTS
@@ -62,9 +75,11 @@ BC_ASSESSMENTS
 TAXES
    ↓
 BC_SPECULATION_NOTICES
+```
 
 # Property Management Contacts
 
+```
 PROPERTIES
    ↓
 BUILDING_MANAGERS
@@ -72,12 +87,15 @@ BUILDING_MANAGERS
 STRATA_MANAGERS
    ↓
 KEYS_FOBS_BUZZER
+```
 
 # Rent History
 
+```
 PROPERTIES
    ↓
 RENT
+```
 
 # Load Order Summary
 
