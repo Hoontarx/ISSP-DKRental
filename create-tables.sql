@@ -15,19 +15,6 @@ GO
 -- ==============================================================
 -- 1) PROPERTIES
 -- ==============================================================
-IF OBJECT_ID('pm.PROPERTIES', 'U') IS NOT NULL
-    DROP TABLE pm.PROPERTIES;
-GO
-IF OBJECT_ID('pm.PROPERTY_TYPE', 'U') IS NOT NULL
-    DROP TABLE pm.PROPERTY_TYPE;
-GO
-IF OBJECT_ID('pm.CITY', 'U') IS NOT NULL
-    DROP TABLE pm.CITY;
-GO
-IF OBJECT_ID('pm.PROVINCE', 'U') IS NOT NULL
-    DROP TABLE pm.PROVINCE;
-GO
-
 CREATE TABLE pm.PROVINCE
 (
     province_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -54,13 +41,13 @@ CREATE TABLE pm.PROPERTIES
     property_id INT IDENTITY(1,1) PRIMARY KEY,
     building_no NVARCHAR(50) NOT NULL,
     unit_number NVARCHAR(50) NOT NULL,
-    unit_type INT,
+    unit_type_id INT,
     address NVARCHAR(255),
     postal_code NVARCHAR(20),
     management_start_date DATE,
     length_of_service NVARCHAR(50),
     status NVARCHAR(50),
-    storage_locker NVARCHAR(50),
+    storage_locker NVARCHAR(100),
     parking_stall NVARCHAR(50),
     remarks NVARCHAR(500),
     city_id INT,
@@ -68,7 +55,7 @@ CREATE TABLE pm.PROPERTIES
     
     CONSTRAINT UQ_PROPERTIES UNIQUE (building_no, unit_number),
     
-    CONSTRAINT FK_PROPERTIES_UNIT_TYPE FOREIGN KEY (unit_type)
+    CONSTRAINT FK_PROPERTIES_UNIT_TYPE FOREIGN KEY (unit_type_id)
         REFERENCES pm.PROPERTY_TYPE(unit_type_id),
         
     CONSTRAINT FK_PROPERTIES_CITY FOREIGN KEY (city_id)
@@ -83,7 +70,7 @@ CREATE UNIQUE INDEX IX_PROPERTIES_BUILDING_UNIT
     ON pm.PROPERTIES(building_no, unit_number);
 
 CREATE INDEX IX_PROPERTIES_UNIT_TYPE
-    ON pm.PROPERTIES(unit_type);
+    ON pm.PROPERTIES(unit_type_id);
 
 CREATE INDEX IX_PROPERTIES_CITY
     ON pm.PROPERTIES(city_id);
@@ -95,9 +82,18 @@ CREATE INDEX IX_PROPERTIES_PROVINCE
 -- ==============================================================
 -- 2) TENANTS (Normalized)
 -- ==============================================================
-IF OBJECT_ID('pm.TENANCY', 'U') IS NOT NULL
-    DROP TABLE pm.TENANCY;
+
+CREATE TABLE pm.TENANT_INSURANCE
+(
+    insurance_id INT IDENTITY(1,1) PRIMARY KEY,
+    policy_number NVARCHAR(100),
+    insurance_start_date DATE,
+    insurance_end_date DATE,
+    remarks NVARCHAR(255)
+);
 GO
+
+
 
 CREATE TABLE pm.TENANCY
 (
@@ -123,38 +119,17 @@ CREATE TABLE pm.TENANCY
         REFERENCES pm.TENANT_INSURANCE (insurance_id)
 );
 GO
-
-
-IF OBJECT_ID('pm.TENANT_INSURANCE', 'U') IS NOT NULL
-    DROP TABLE pm.TENANT_INSURANCE;
-GO
-
-CREATE TABLE pm.TENANT_INSURANCE
-(
-    insurance_id INT IDENTITY(1,1) PRIMARY KEY,
-    policy_number NVARCHAR(100),
-    insurance_start_date DATE,
-    insurance_end_date DATE,
-    remarks NVARCHAR(255)
-);
-GO
-
-CREATE INDEX IX_TENANT_INSURANCE_POLICY
-    ON pm.TENANT_INSURANCE(policy_number);
-
-
-
-IF OBJECT_ID('pm.TENANT', 'U') IS NOT NULL
-    DROP TABLE pm.TENANT;
-GO
-
 CREATE TABLE pm.TENANT
 (
+    tenancy_id INT,
     tenant_id INT IDENTITY(1,1) PRIMARY KEY,  
     first_name NVARCHAR(100) NOT NULL,
     last_name NVARCHAR(100) NOT NULL,
     phone_number NVARCHAR(20) NULL,
     email NVARCHAR(150) NULL
+
+    CONSTRAINT FK_TENANCY_TENANT FOREIGN KEY (tenancy_id)
+    REFERENCES pm.TENANCY (tenancy_id),
 );
 GO
 
@@ -165,14 +140,45 @@ CREATE INDEX IX_TENANT_EMAIL
 CREATE INDEX IX_TENANT_PHONE
     ON pm.TENANT(phone_number);
 
+CREATE INDEX IX_TENANT_INSURANCE_POLICY
+    ON pm.TENANT_INSURANCE(policy_number);
+
 
 
 -- ==============================================================
 -- 3) OWNERS
 -- ==============================================================
-IF OBJECT_ID('pm.OWNERS','U') IS NOT NULL
-    DROP TABLE pm.OWNERS;
+
+
+CREATE TABLE pm.CARE_OF
+(
+    care_of_id INT IDENTITY(1,1) PRIMARY KEY,
+    first_name NVARCHAR(100),
+    last_name NVARCHAR(100),
+    phone_number NVARCHAR(50),
+    email NVARCHAR(255)
+    
+);
 GO
+
+CREATE TABLE pm.OWNER_INSURANCE
+(
+    property_id INT,
+    owner_insurance_id INT IDENTITY(1,1) PRIMARY KEY,
+    policy_number NVARCHAR(100),
+    insurance_start_date DATE,
+    insurance_end_date DATE,
+    remarks NVARCHAR(255)
+
+    CONSTRAINT FK_PROPERTY_INSURANCE FOREIGN KEY (property_id)
+    REFERENCES pm.PROPERTIES (property_id)
+);
+GO
+
+CREATE INDEX IX_OWNER_INSURANCE_POLICY
+    ON pm.OWNER_INSURANCE(policy_number);
+
+
 CREATE TABLE pm.OWNERS
 (
     owner_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -196,45 +202,6 @@ CREATE INDEX IX_OWNERS_CARE_OF
 CREATE INDEX IX_OWNERS_EMAIL
     ON pm.OWNERS(email);
 
-
-
-IF OBJECT_ID('pm.CARE_OF', 'U') IS NOT NULL
-    DROP TABLE pm.CARE_OF;
-GO
-
-CREATE TABLE pm.CARE_OF
-(
-    care_of_id INT IDENTITY(1,1) PRIMARY KEY,
-    first_name NVARCHAR(100),
-    last_name NVARCHAR(100),
-    phone_number NVARCHAR(50),
-    email NVARCHAR(255)
-    
-);
-GO
-
-IF OBJECT_ID('pm.OWNER_INSURANCE', 'U') IS NOT NULL
-    DROP TABLE pm.OWNER_INSURANCE;
-GO
-
-CREATE TABLE pm.OWNER_INSURANCE
-(
-    owner_insurance_id INT IDENTITY(1,1) PRIMARY KEY,
-    policy_number NVARCHAR(100),
-    insurance_start_date DATE,
-    insurance_end_date DATE,
-    remarks NVARCHAR(255)
-);
-GO
-
-CREATE INDEX IX_OWNER_INSURANCE_POLICY
-    ON pm.OWNER_INSURANCE(policy_number);
-
-
-IF OBJECT_ID('pm.OWNERSHIP', 'U') IS NOT NULL
-    DROP TABLE pm.OWNERSHIP;
-GO
-
 CREATE TABLE pm.OWNERSHIP
 (
     ownership_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -254,15 +221,9 @@ CREATE INDEX IX_OWNERSHIP_OWNER
 
 CREATE INDEX IX_OWNERSHIP_PROPERTY
     ON pm.OWNERSHIP(frn_property_id);
-
-
-
 -- ==============================================================
--- 4) RENT
+-- 4) RENT TABLE
 -- ==============================================================
-IF OBJECT_ID('pm.RENT','U') IS NOT NULL
-    DROP TABLE pm.RENT;
-GO
 
 CREATE TABLE pm.RENT
 (
@@ -289,9 +250,7 @@ GO
 -- ==============================================================  
 -- 5) BC ASSESSMENTS  
 -- ==============================================================  
-IF OBJECT_ID('pm.BC_ASSESSMENTS','U') IS NOT NULL  
-    DROP TABLE pm.BC_ASSESSMENTS;  
-GO  
+
 
 CREATE TABLE pm.BC_ASSESSMENTS
 (
@@ -315,9 +274,7 @@ GO
 -- ==============================================================
 -- 6) INSPECTIONS
 -- ==============================================================
-IF OBJECT_ID('pm.INSPECTION_TYPE','U') IS NOT NULL
-    DROP TABLE pm.INSPECTION_TYPE;
-GO
+
 
 CREATE TABLE pm.INSPECTION_TYPE
 (
@@ -326,9 +283,7 @@ CREATE TABLE pm.INSPECTION_TYPE
 );
 GO
 
-IF OBJECT_ID('pm.INSPECTIONS','U') IS NOT NULL
-    DROP TABLE pm.INSPECTIONS;
-GO
+
 
 CREATE TABLE pm.INSPECTIONS
 (
@@ -355,9 +310,7 @@ CREATE INDEX IX_INSPECTIONS_PROPERTY
     ON pm.INSPECTIONS(property_id);
 GO
 
-IF OBJECT_ID('pm.INSPECTION_ISSUES','U') IS NOT NULL
-    DROP TABLE pm.INSPECTION_ISSUES;
-GO
+
 
 CREATE TABLE pm.INSPECTION_ISSUES
 (
@@ -382,9 +335,7 @@ GO
 -- ==============================================================  
 -- 7) CONTRACTORS  
 -- ==============================================================  
-IF OBJECT_ID('pm.CONTRACTORS','U') IS NOT NULL  
-    DROP TABLE pm.CONTRACTORS;  
-GO  
+
 CREATE TABLE pm.CONTRACTORS  
 (  
     contractor_id INT IDENTITY(1,1) PRIMARY KEY,  
@@ -401,9 +352,7 @@ GO
 -- ==============================================================  
 -- 8) MAINTENANCE  
 -- ==============================================================  
-IF OBJECT_ID('pm.MAINTENANCE','U') IS NOT NULL  
-    DROP TABLE pm.MAINTENANCE;  
-GO  
+
 CREATE TABLE pm.MAINTENANCE  
 (  
     maintenance_id INT IDENTITY(1,1) PRIMARY KEY,  
@@ -429,9 +378,7 @@ GO
 -- ==============================================================
 -- 9) TAXES
 -- ==============================================================
-IF OBJECT_ID('pm.TAXES','U') IS NOT NULL
-    DROP TABLE pm.TAXES;
-GO
+
 CREATE TABLE pm.TAXES
 (
     tax_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -451,9 +398,20 @@ GO
 -- ==============================================================
 -- 10) UTILITIES (Fixed - No Cascade Cycle)
 -- ==============================================================
-IF OBJECT_ID('pm.UTILITIES','U') IS NOT NULL
-    DROP TABLE pm.UTILITIES;
-GO
+
+CREATE TABLE pm.UTILITY_PAYER
+(
+    payer_id INT IDENTITY(1,1) PRIMARY KEY,
+    payer VARCHAR(6)
+);
+
+CREATE TABLE pm.UTILITY_TYPE
+(
+    utype_id INT IDENTITY(1,1) PRIMARY KEY,
+    utility_name VARCHAR(25)
+);
+
+
 CREATE TABLE pm.UTILITIES
 (
     utility_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -463,22 +421,10 @@ CREATE TABLE pm.UTILITIES
     total_amount DECIMAL(10,2),
 
     CONSTRAINT FK_PROPERTY_UTILITIEs FOREIGN KEY(property_id)
-        REFERENCES pm.property(property_id),
+        REFERENCES pm.PROPERTIES(property_id),
     CONSTRAINT FK_UTYPE_UTILITIEs FOREIGN KEY(utype_id)
         REFERENCES pm.UTILITY_TYPE(utype_id)
 );
-GO
-IF OBJECT_ID('pm.UTILITY_TYPE','U') IS NOT NULL
-    DROP TABLE pm.UTILITY_TYPE;
-GO
-CREATE TABLE pm.UTILITY_TYPE
-(
-    utype_id INT IDENTITY(1,1),
-    utility_name VARCHAR(25)
-);
-
-IF OBJECT_ID('pm.UTILITY_SPLIT', 'U') IS NOT NULL
-    DROP TABLE pm.UTILITY_SPLIT;
 GO
 
 CREATE TABLE pm.UTILITY_SPLIT
@@ -486,8 +432,7 @@ CREATE TABLE pm.UTILITY_SPLIT
     split_id INT IDENTITY(1,1) PRIMARY KEY,
     payer_id INT NOT NULL,
     utility_id INT NOT NULL,
-    percentage DECIMAL(5,2) NOT NULL,
-    amount AS (total_amount * percentage / 100.0) PERSISTED,
+    percentage DECIMAL(5,2) NOT NULL
     
     CONSTRAINT FK_UTILITY_SPLIT_PAYER
     FOREIGN KEY (payer_id) REFERENCES pm.UTILITY_PAYER(payer_id),
@@ -498,27 +443,20 @@ CREATE TABLE pm.UTILITY_SPLIT
 );
 
 
-IF OBJECT_ID('pm.UTILITY_PAYER','U') IS NOT NULL
-    DROP TABLE pm.UTILITY_PAYER;
-GO
-CREATE TABLE pm.UTILITY_PAYER
-(
-    payer_id INT IDENTITY(1,1) PRIMARY KEY,
-    payer VARCHAR(6)
-);
-
 
 -- ==============================================================
 -- 11) MOVE IN / OUT 
 -- ==============================================================
-IF OBJECT_ID('pm.MOVE_IN_OUT','U') IS NOT NULL
-    DROP TABLE pm.MOVE_IN_OUT;
-GO
-CREATE TABLE pm.MOVE_IN_OUT
-(
+
+CREATE TABLE pm.MOVE_TYPE (
+    move_type_id INT IDENTITY(1,1) PRIMARY KEY
+);
+
+
+CREATE TABLE pm.MOVE (
     move_id INT IDENTITY(1,1) PRIMARY KEY,
-    tenant_id INT NOT NULL,
-    move_type NVARCHAR(50),  -- 'Move In' or 'Move Out'
+    move_type_id INT NOT NULL,
+    tenancy_id INT NOT NULL,
     move_date DATE,
     tenant_availability NVARCHAR(50),
     proposed_date_tbc BIT,
@@ -530,136 +468,97 @@ CREATE TABLE pm.MOVE_IN_OUT
     move_in_orientation BIT,
     form_k BIT,
     zinspector NVARCHAR(100),
-    CONSTRAINT FK_MoveInOut_Tenants FOREIGN KEY (tenant_id)
-        REFERENCES pm.TENANTS(tenant_id)
+    FOREIGN KEY (move_type_id) REFERENCES pm.MOVE_TYPE(move_type_id),
+    FOREIGN KEY (tenancy_id)   REFERENCES pm.TENANCY(tenancy_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
-GO
-CREATE INDEX IX_MOVEINOUT_tenant_id
-    ON pm.MOVE_IN_OUT(tenant_id);
-GO
-CREATE INDEX IX_MOVEINOUT_move_date
-    ON pm.MOVE_IN_OUT(move_date);  
-GO
-
 -- ==============================================================
 -- 12) BUILDING MANAGERS
 -- ==============================================================
-IF OBJECT_ID('pm.BUILDING_MANAGERS','U') IS NOT NULL
-    DROP TABLE pm.BUILDING_MANAGERS;
-GO
-CREATE TABLE pm.BUILDING_MANAGERS
-(
+
+CREATE TABLE pm.BUILDING_MANAGERS (
     manager_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
+    property_id INT NOT NULL,
     name NVARCHAR(100),
     phone NVARCHAR(50),
     email NVARCHAR(255),
     concierge_desk NVARCHAR(100),
     concierge_phone NVARCHAR(50),
     concierge_email NVARCHAR(255),
-    CONSTRAINT FK_BuildingManagers_Properties FOREIGN KEY (building_no, unit_number)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
+    FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
-GO
-CREATE INDEX IX_BUILDING_MANAGERS_building_unit
-    ON pm.BUILDING_MANAGERS(building_no, unit_number);
-GO
+
 
 -- ==============================================================
 -- 13) STRATA MANAGERS
 -- ==============================================================
-IF OBJECT_ID('pm.STRATA_MANAGERS','U') IS NOT NULL
-    DROP TABLE pm.STRATA_MANAGERS;
-GO
-CREATE TABLE pm.STRATA_MANAGERS
-(
+
+CREATE TABLE pm.STRATA_MANAGERS (
     strata_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
+    property_id INT NOT NULL,
     strata_number NVARCHAR(50),
     strata_lot NVARCHAR(50),
     manager_name NVARCHAR(100),
     contact_number NVARCHAR(50),
     email NVARCHAR(255),
-    CONSTRAINT FK_StrataManagers_Properties FOREIGN KEY (building_no, unit_number)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
+    FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
-GO
-CREATE INDEX IX_STRATA_MANAGERS_building_unit
-    ON pm.STRATA_MANAGERS(building_no, unit_number);
-GO
+
 
 -- ==============================================================
 -- 14) KEYS / FOBS
 -- ==============================================================
-IF OBJECT_ID('pm.KEYS_FOBS','U') IS NOT NULL
-    DROP TABLE pm.KEYS_FOBS;
-GO
-CREATE TABLE pm.KEYS_FOBS
-(
+
+CREATE TABLE pm.KEYS_FOBS_BUZZER (
     key_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
+    property_id INT NOT NULL,
     keys NVARCHAR(50),
     fobs NVARCHAR(50),
     buzzer_no NVARCHAR(50),
-    CONSTRAINT FK_KeysFobs_Properties FOREIGN KEY (building_no, unit_number)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
+    FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
-GO
-CREATE INDEX IX_KEYSFOBS_building_unit
-    ON pm.KEYS_FOBS(building_no, unit_number);
-GO
 
--- ==============================================================
--- 17) INSPECTION 
--- ==============================================================
-IF OBJECT_ID('pm.INSPECTION_ISSUES','U') IS NOT NULL
-    DROP TABLE pm.INSPECTION_ISSUES;
-GO
-CREATE TABLE pm.INSPECTION_ISSUES
-(
-    issue_id INT IDENTITY(1,1) PRIMARY KEY,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NULL,
-    description_of_issue NVARCHAR(MAX),
-    action_plan NVARCHAR(MAX),
-    checked_off_by NVARCHAR(100),
-    -- corresponds to "C/O" (Aleks)
-    status NVARCHAR(100),
-    date_logged DATETIME DEFAULT GETDATE(),
-    CONSTRAINT FK_InspectionIssues_Properties FOREIGN KEY (building_no, unit_number)
-        REFERENCES pm.PROPERTIES(building_no, unit_number)
-        ON UPDATE CASCADE ON DELETE CASCADE
-);
-GO
-CREATE INDEX IX_INSPECTION_ISSUES_building_unit
-    ON pm.INSPECTION_ISSUES(building_no, unit_number);
-GO
 
 -- ==============================================================
 -- 18) BC SPECULATION TAX NOTICES (Denormalized - Matches Excel)
 -- ==============================================================
-IF OBJECT_ID('pm.BC_SPECULATION_NOTICES','U') IS NOT NULL
-    DROP TABLE pm.BC_SPECULATION_NOTICES;
-GO
-CREATE TABLE pm.BC_SPECULATION_NOTICES
-(
-    notice_id INT IDENTITY(1,1) PRIMARY KEY,
+
+CREATE TABLE pm.BC_ASSESSMENTS (
+    assessment_id INT IDENTITY(1,1) PRIMARY KEY,
+    property_id INT NOT NULL,
     building_no NVARCHAR(50) NOT NULL,
-    owner_name NVARCHAR(255),
-    owner_email_1 NVARCHAR(255),
-    owner_email_2 NVARCHAR(255),
-    notice_2025 NVARCHAR(500),  -- Can be NULL or contain notes
-    notice_2024 NVARCHAR(500),  -- Can be NULL or contain notes
-    notice_2023 NVARCHAR(500)   -- Can be NULL or contain notes
+    unit_number NVARCHAR(50) NOT NULL,
+    [year] INT NOT NULL,
+    assessed_value DECIMAL(12,2),
+    CONSTRAINT UQ_BC_Assessments UNIQUE (building_no, unit_number, [year]),
+    FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
-GO
-CREATE INDEX IX_BC_SPECULATION_building
-    ON pm.BC_SPECULATION_NOTICES(building_no);
-GO
+
+CREATE TABLE pm.BC_SPECULATION_NOTICES (
+    notice_id INT IDENTITY(1,1) PRIMARY KEY,
+    property_id INT NOT NULL,
+    owner_first_name NVARCHAR(255),
+    owner_last_name  NVARCHAR(255),
+    owner_email NVARCHAR(255),
+    notice NVARCHAR(500) NULL, -- can be NULL or hold notes
+    year_of_notice INT NOT NULL,
+    CONSTRAINT UQ_NOTICE UNIQUE (notice, year_of_notice),
+    FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE pm.TAXES (
+    tax_id INT IDENTITY(1,1) PRIMARY KEY,
+    property_id INT NOT NULL,
+    municipal_eht DECIMAL(10,2),
+    bc_speculation_tax DECIMAL(10,2),
+    federal_uht DECIMAL(10,2),
+    FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
