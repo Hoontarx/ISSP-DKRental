@@ -326,7 +326,6 @@ WHERE owners.first_name IS NOT NULL
 
 UNION ALL
 
--- Company owners using care_of
 SELECT DISTINCT
     o.owner_id,
     p.property_id
@@ -384,9 +383,54 @@ WHERE v.rent_amount IS NOT NULL
   );
 
 
+--- Inspection INSERTION----
+
+INSERT INTO pm.INSPECTION_TYPE (INSPECTION_TYPE)
+SELECT DISTINCT [Self_or_Site_Inspections]
+FROM dbo.Temp_B_Properties
+WHERE Self_or_Site_Inspections IS NOT NULL;
+
+INSERT INTO pm.INSPECTIONS (
+    property_id,
+    inspection_type_id,
+    last_inspection_date,
+    need_inspection
+)
+SELECT DISTINCT
+    p.property_id,
+    it.inspection_type_id,
+    t.LAST_INSPECTION,
+    t.Need_Inspection
+FROM dbo.Temp_B_Properties AS t
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = t.building_no
+   AND p.unit_number = t.UNIT_NUMBER
+JOIN pm.INSPECTION_TYPE AS it
+    ON it.INSPECTION_TYPE = t.Self_or_Site_Inspections
+WHERE t.Self_or_Site_Inspections IS NOT NULL;
+
+INSERT INTO pm.INSPECTION_ISSUES (
+    inspection_id,
+    description_of_issue,
+    action_plan,
+    checked_off_by,
+    [status]
+)
+SELECT DISTINCT
+    i.inspection_id,
+    t.Description_of_Issue,
+    t.Action_Plan,
+    t.CO AS checked_off_by,
+    t.[Status]
+FROM dbo.Temp_Inspections_w_Issues AS t
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = t.building_no
+   AND p.unit_number = t.unit_no
+JOIN pm.INSPECTIONS AS i
+    ON i.property_id = p.property_id;
 
 
---- INSERTION----
+
 --- INSERTION----
 --- INSERTION----
 --- INSERTION----
