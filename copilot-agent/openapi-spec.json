@@ -1,0 +1,1605 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Property Management API",
+    "description": "Complete property management database API for Copilot Studio. Enables natural language queries for properties, tenants, maintenance, inspections, and financial data.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Property Management Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://YOUR-FUNCTION-APP.azurewebsites.net/api",
+      "description": "Azure Functions Production"
+    }
+  ],
+  "security": [
+    {
+      "apiKeyHeader": []
+    }
+  ],
+  "paths": {
+    "/GetProperties": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "Search for properties",
+        "description": "Search and filter properties by city, province, status, or unit type. Returns a list of properties matching the criteria.",
+        "operationId": "GetProperties",
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "description": "Filter by city name (partial match supported)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "province",
+            "in": "query",
+            "description": "Filter by province name (e.g., BC, AB)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by property status (e.g., Active, Rented, Vacant)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "unitType",
+            "in": "query",
+            "description": "Filter by unit type (e.g., Condo, Apartment, House)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetPropertyById": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "Get property by ID",
+        "description": "Retrieve detailed information about a specific property using its ID.",
+        "operationId": "GetPropertyById",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "required": true,
+            "description": "The unique ID of the property",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/CreateProperty": {
+      "post": {
+        "tags": ["Properties"],
+        "summary": "Create a new property",
+        "description": "Add a new property to the database with all relevant details.",
+        "operationId": "CreateProperty",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePropertyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/UpdateProperty": {
+      "patch": {
+        "tags": ["Properties"],
+        "summary": "Update property details",
+        "description": "Update one or more fields of an existing property. Only provided fields will be updated.",
+        "operationId": "UpdateProperty",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePropertyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropertyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetPropertyDashboard": {
+      "get": {
+        "tags": ["Properties"],
+        "summary": "Get complete property dashboard",
+        "description": "Get a comprehensive dashboard view of all properties with current tenants, rent, owners, and open issues.",
+        "operationId": "GetPropertyDashboard",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetActiveTenancies": {
+      "get": {
+        "tags": ["Tenants"],
+        "summary": "Get active tenancies",
+        "description": "Retrieve all active tenant leases, optionally filtered by property.",
+        "operationId": "GetActiveTenancies",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "description": "Filter by specific property ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenancyListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SearchTenants": {
+      "get": {
+        "tags": ["Tenants"],
+        "summary": "Search for tenants",
+        "description": "Search tenants by name, email, or phone number. Supports partial matches.",
+        "operationId": "SearchTenants",
+        "parameters": [
+          {
+            "name": "firstName",
+            "in": "query",
+            "description": "Tenant first name (partial match)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lastName",
+            "in": "query",
+            "description": "Tenant last name (partial match)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Tenant email address (partial match)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "phoneNumber",
+            "in": "query",
+            "description": "Tenant phone number (partial match)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/CreateTenancy": {
+      "post": {
+        "tags": ["Tenants"],
+        "summary": "Create new tenancy/lease",
+        "description": "Create a new tenancy record for a property, including lease dates, deposits, and insurance information.",
+        "operationId": "CreateTenancy",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenancyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenancyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/AddTenant": {
+      "post": {
+        "tags": ["Tenants"],
+        "summary": "Add tenant to tenancy",
+        "description": "Add a new tenant to an existing tenancy/lease record.",
+        "operationId": "AddTenant",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTenantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/UpdateTenant": {
+      "patch": {
+        "tags": ["Tenants"],
+        "summary": "Update tenant contact information",
+        "description": "Update tenant email address or phone number.",
+        "operationId": "UpdateTenant",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetExpiringLeases": {
+      "get": {
+        "tags": ["Tenants"],
+        "summary": "Get expiring leases",
+        "description": "Get all leases expiring within a specified number of days (default 90 days).",
+        "operationId": "GetExpiringLeases",
+        "parameters": [
+          {
+            "name": "daysAhead",
+            "in": "query",
+            "description": "Number of days to look ahead (default: 90)",
+            "schema": {
+              "type": "integer",
+              "default": 90
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpiringLeasesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetMaintenanceRequests": {
+      "get": {
+        "tags": ["Maintenance"],
+        "summary": "Get maintenance requests",
+        "description": "Retrieve maintenance requests, with optional filters for property, status, or assignee.",
+        "operationId": "GetMaintenanceRequests",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "description": "Filter by property ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by status (Open, In Progress, Closed)",
+            "schema": {
+              "type": "string",
+              "enum": ["Open", "In Progress", "Closed", "Pending"]
+            }
+          },
+          {
+            "name": "assignedTo",
+            "in": "query",
+            "description": "Filter by assignee name (partial match)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/CreateMaintenance": {
+      "post": {
+        "tags": ["Maintenance"],
+        "summary": "Create maintenance request",
+        "description": "Log a new maintenance request for a property.",
+        "operationId": "CreateMaintenance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/UpdateMaintenance": {
+      "patch": {
+        "tags": ["Maintenance"],
+        "summary": "Update maintenance request",
+        "description": "Update status, description, action plan, or assignment of a maintenance request.",
+        "operationId": "UpdateMaintenance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetInspections": {
+      "get": {
+        "tags": ["Inspections"],
+        "summary": "Get inspections",
+        "description": "Retrieve property inspections with optional filters.",
+        "operationId": "GetInspections",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "description": "Filter by property ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "inspectionType",
+            "in": "query",
+            "description": "Filter by inspection type (Annual, Move In, Move Out, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "needInspection",
+            "in": "query",
+            "description": "Filter by inspection needed status (Yes/No)",
+            "schema": {
+              "type": "string",
+              "enum": ["Yes", "No"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/CreateInspection": {
+      "post": {
+        "tags": ["Inspections"],
+        "summary": "Create inspection record",
+        "description": "Log a new inspection for a property.",
+        "operationId": "CreateInspection",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInspectionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetUpcomingEvents": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get upcoming events and deadlines",
+        "description": "Get all upcoming events including lease expirations, insurance renewals, inspections, and moves.",
+        "operationId": "GetUpcomingEvents",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpcomingEventsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetOpenIssues": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get all open issues",
+        "description": "Get all open maintenance requests and inspection issues.",
+        "operationId": "GetOpenIssues",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "description": "Filter by property ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenIssuesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetFinancialOverview": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get financial overview",
+        "description": "Get financial data including current rent, taxes, and assessments for properties.",
+        "operationId": "GetFinancialOverview",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "description": "Filter by specific property ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialOverviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/GetRentHistory": {
+      "get": {
+        "tags": ["Financial"],
+        "summary": "Get rent history",
+        "description": "Get complete rent history for a specific property.",
+        "operationId": "GetRentHistory",
+        "parameters": [
+          {
+            "name": "propertyId",
+            "in": "query",
+            "required": true,
+            "description": "Property ID to get rent history for",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentHistoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/AddRent": {
+      "post": {
+        "tags": ["Financial"],
+        "summary": "Add rent record",
+        "description": "Add a new rent amount or rent increase for a property.",
+        "operationId": "AddRent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/UpdateTaxes": {
+      "patch": {
+        "tags": ["Financial"],
+        "summary": "Update property taxes",
+        "description": "Update tax amounts for a property (municipal, speculation, federal).",
+        "operationId": "UpdateTaxes",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaxesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "name": "x-functions-key",
+        "in": "header",
+        "description": "Azure Function Key for authentication"
+      }
+    },
+    "schemas": {
+      "PropertyListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Property"
+            }
+          }
+        }
+      },
+      "PropertyResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Property"
+            }
+          }
+        }
+      },
+      "Property": {
+        "type": "object",
+        "properties": {
+          "property_id": {
+            "type": "integer"
+          },
+          "building_no": {
+            "type": "string"
+          },
+          "unit_number": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "postal_code": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "province": {
+            "type": "string"
+          },
+          "unit_type": {
+            "type": "string"
+          },
+          "management_start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string"
+          },
+          "storage_locker": {
+            "type": "string"
+          },
+          "parking_stall": {
+            "type": "string"
+          },
+          "remarks": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePropertyRequest": {
+        "type": "object",
+        "required": ["buildingNo", "unitNumber"],
+        "properties": {
+          "buildingNo": {
+            "type": "string",
+            "description": "Building number"
+          },
+          "unitNumber": {
+            "type": "string",
+            "description": "Unit number"
+          },
+          "address": {
+            "type": "string",
+            "description": "Street address"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Postal code"
+          },
+          "cityName": {
+            "type": "string",
+            "description": "City name"
+          },
+          "provinceName": {
+            "type": "string",
+            "description": "Province (e.g., BC, AB)"
+          },
+          "unitType": {
+            "type": "string",
+            "description": "Type of unit (e.g., Condo, Apartment)"
+          },
+          "managementStartDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date management started"
+          },
+          "status": {
+            "type": "string",
+            "description": "Property status (e.g., Active, Rented)"
+          },
+          "storageLocker": {
+            "type": "string",
+            "description": "Storage locker number"
+          },
+          "parkingStall": {
+            "type": "string",
+            "description": "Parking stall number"
+          },
+          "remarks": {
+            "type": "string",
+            "description": "Additional notes"
+          }
+        }
+      },
+      "UpdatePropertyRequest": {
+        "type": "object",
+        "required": ["propertyId"],
+        "properties": {
+          "propertyId": {
+            "type": "integer",
+            "description": "ID of property to update"
+          },
+          "address": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "cityName": {
+            "type": "string"
+          },
+          "provinceName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "remarks": {
+            "type": "string"
+          }
+        }
+      },
+      "DashboardResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "TenancyListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tenancy"
+            }
+          }
+        }
+      },
+      "Tenancy": {
+        "type": "object",
+        "properties": {
+          "tenancy_id": {
+            "type": "integer"
+          },
+          "property_id": {
+            "type": "integer"
+          },
+          "building_no": {
+            "type": "string"
+          },
+          "unit_number": {
+            "type": "string"
+          },
+          "lease_start_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "lease_end_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "lease_status": {
+            "type": "string"
+          },
+          "security_deposit": {
+            "type": "number"
+          },
+          "pet_deposit": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateTenancyRequest": {
+        "type": "object",
+        "required": ["propertyId", "leaseStartDate"],
+        "properties": {
+          "propertyId": {
+            "type": "integer",
+            "description": "Property ID for the tenancy"
+          },
+          "leaseStartDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Lease start date"
+          },
+          "leaseEndDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Lease end date"
+          },
+          "leaseStatus": {
+            "type": "string",
+            "description": "Lease status (default: Active)"
+          },
+          "securityDeposit": {
+            "type": "number",
+            "description": "Security deposit amount"
+          },
+          "petDeposit": {
+            "type": "number",
+            "description": "Pet deposit amount"
+          },
+          "insurancePolicyNumber": {
+            "type": "string",
+            "description": "Tenant insurance policy number"
+          }
+        }
+      },
+      "TenancyResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tenancy"
+            }
+          }
+        }
+      },
+      "TenantSearchResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tenant"
+            }
+          }
+        }
+      },
+      "Tenant": {
+        "type": "object",
+        "properties": {
+          "tenant_id": {
+            "type": "integer"
+          },
+          "tenancy_id": {
+            "type": "integer"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          }
+        }
+      },
+      "AddTenantRequest": {
+        "type": "object",
+        "required": ["tenancyId", "firstName", "lastName"],
+        "properties": {
+          "tenancyId": {
+            "type": "integer",
+            "description": "Tenancy ID to add tenant to"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "Tenant first name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Tenant last name"
+          },
+          "email": {
+            "type": "string",
+            "description": "Tenant email address"
+          },
+          "mobile": {
+            "type": "string",
+            "description": "Tenant phone number"
+          }
+        }
+      },
+      "UpdateTenantRequest": {
+        "type": "object",
+        "required": ["tenantId"],
+        "properties": {
+          "tenantId": {
+            "type": "integer",
+            "description": "Tenant ID to update"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string"
+          }
+        }
+      },
+      "TenantResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tenant"
+            }
+          }
+        }
+      },
+      "ExpiringLeasesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tenancy_id": {
+                  "type": "integer"
+                },
+                "building_no": {
+                  "type": "string"
+                },
+                "unit_number": {
+                  "type": "string"
+                },
+                "lease_end_date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "days_until_expiry": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MaintenanceListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Maintenance"
+            }
+          }
+        }
+      },
+      "Maintenance": {
+        "type": "object",
+        "properties": {
+          "maintenance_id": {
+            "type": "integer"
+          },
+          "property_id": {
+            "type": "integer"
+          },
+          "building_no": {
+            "type": "string"
+          },
+          "unit_number": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "action_plan": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateMaintenanceRequest": {
+        "type": "object",
+        "required": ["propertyId", "description"],
+        "properties": {
+          "propertyId": {
+            "type": "integer",
+            "description": "Property ID for the maintenance request"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the maintenance issue"
+          },
+          "actionPlan": {
+            "type": "string",
+            "description": "Planned action to resolve the issue"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status (default: Open)",
+            "enum": ["Open", "In Progress", "Closed", "Pending"]
+          },
+          "assignedTo": {
+            "type": "string",
+            "description": "Person assigned to handle this"
+          },
+          "contractorId": {
+            "type": "integer",
+            "description": "Contractor ID if assigned to contractor"
+          }
+        }
+      },
+      "UpdateMaintenanceRequest": {
+        "type": "object",
+        "required": ["maintenanceId"],
+        "properties": {
+          "maintenanceId": {
+            "type": "integer",
+            "description": "Maintenance request ID to update"
+          },
+          "description": {
+            "type": "string"
+          },
+          "actionPlan": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["Open", "In Progress", "Closed", "Pending"]
+          },
+          "assignedTo": {
+            "type": "string"
+          }
+        }
+      },
+      "MaintenanceResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Maintenance"
+            }
+          }
+        }
+      },
+      "InspectionListResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Inspection"
+            }
+          }
+        }
+      },
+      "Inspection": {
+        "type": "object",
+        "properties": {
+          "inspection_id": {
+            "type": "integer"
+          },
+          "property_id": {
+            "type": "integer"
+          },
+          "inspection_type": {
+            "type": "string"
+          },
+          "last_inspection_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "need_inspection": {
+            "type": "string"
+          },
+          "inspection_notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateInspectionRequest": {
+        "type": "object",
+        "required": ["propertyId", "inspectionType"],
+        "properties": {
+          "propertyId": {
+            "type": "integer",
+            "description": "Property ID for inspection"
+          },
+          "inspectionType": {
+            "type": "string",
+            "description": "Type of inspection (Annual, Move In, Move Out, etc.)"
+          },
+          "lastInspectionDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of inspection"
+          },
+          "needInspection": {
+            "type": "string",
+            "description": "Does property need inspection (Yes/No)"
+          },
+          "inspectionNotes": {
+            "type": "string",
+            "description": "Inspection notes"
+          },
+          "followUpDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Follow-up date"
+          }
+        }
+      },
+      "InspectionResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Inspection"
+            }
+          }
+        }
+      },
+      "UpcomingEventsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "event_type": {
+                  "type": "string"
+                },
+                "property_id": {
+                  "type": "integer"
+                },
+                "building_no": {
+                  "type": "string"
+                },
+                "unit_number": {
+                  "type": "string"
+                },
+                "event_date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "days_until": {
+                  "type": "integer"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "OpenIssuesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "issue_type": {
+                  "type": "string"
+                },
+                "issue_id": {
+                  "type": "integer"
+                },
+                "property_id": {
+                  "type": "integer"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "FinancialOverviewResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "property_id": {
+                  "type": "integer"
+                },
+                "building_no": {
+                  "type": "string"
+                },
+                "unit_number": {
+                  "type": "string"
+                },
+                "current_rent": {
+                  "type": "number"
+                },
+                "municipal_eht": {
+                  "type": "number"
+                },
+                "bc_speculation_tax": {
+                  "type": "number"
+                },
+                "federal_uht": {
+                  "type": "number"
+                },
+                "total_taxes": {
+                  "type": "number"
+                },
+                "latest_assessment": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RentHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rent"
+            }
+          }
+        }
+      },
+      "Rent": {
+        "type": "object",
+        "properties": {
+          "rent_id": {
+            "type": "integer"
+          },
+          "property_id": {
+            "type": "integer"
+          },
+          "rent_year": {
+            "type": "integer"
+          },
+          "rent_amount": {
+            "type": "number"
+          },
+          "effective_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "AddRentRequest": {
+        "type": "object",
+        "required": ["propertyId", "rentAmount", "effectiveDate"],
+        "properties": {
+          "propertyId": {
+            "type": "integer",
+            "description": "Property ID"
+          },
+          "rentAmount": {
+            "type": "number",
+            "description": "Monthly rent amount"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date rent becomes effective"
+          },
+          "rentYear": {
+            "type": "integer",
+            "description": "Year of rent (default: current year)"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date rent ends"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes"
+          }
+        }
+      },
+      "RentResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Rent"
+            }
+          }
+        }
+      },
+      "UpdateTaxesRequest": {
+        "type": "object",
+        "required": ["propertyId"],
+        "properties": {
+          "propertyId": {
+            "type": "integer",
+            "description": "Property ID to update taxes for"
+          },
+          "municipalEHT": {
+            "type": "number",
+            "description": "Municipal Empty Homes Tax amount"
+          },
+          "bcSpeculationTax": {
+            "type": "number",
+            "description": "BC Speculation Tax amount"
+          },
+          "federalUHT": {
+            "type": "number",
+            "description": "Federal Underused Housing Tax amount"
+          }
+        }
+      },
+      "TaxesResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tax_id": {
+                  "type": "integer"
+                },
+                "property_id": {
+                  "type": "integer"
+                },
+                "municipal_eht": {
+                  "type": "number"
+                },
+                "bc_speculation_tax": {
+                  "type": "number"
+                },
+                "federal_uht": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
