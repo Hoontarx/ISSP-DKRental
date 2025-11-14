@@ -60,7 +60,20 @@ HTTP-triggered functions exposing database operations:
 - **MaintenanceFunctions**: Maintenance and inspection operations
 - **QueryFunctions**: Views, reports, and financial data
 
+### 4. **OpenAPI Specification** (`openapi-spec.json`)
+Complete OpenAPI 3.0 specification for easy integration:
+- **Import directly into Copilot Studio** as a custom connector
+- **18+ operations** fully documented with schemas
+- **Ready to use** - just update your Function App URL
+- **No Power Automate required** - perfect for restricted environments
+
+📘 **See [CUSTOM_CONNECTOR_GUIDE.md](CUSTOM_CONNECTOR_GUIDE.md) for step-by-step setup**
+
 ## Deployment Guide
+
+> **💡 Quick Start Options:**
+> - **Option A (Recommended)**: Use the OpenAPI specification to create a custom connector → See [CUSTOM_CONNECTOR_GUIDE.md](CUSTOM_CONNECTOR_GUIDE.md)
+> - **Option B**: Manually create Actions for each endpoint → See [COPILOT_STUDIO_SETUP.md](COPILOT_STUDIO_SETUP.md)
 
 ### Step 1: Deploy Database Components
 
@@ -122,7 +135,21 @@ HTTP-triggered functions exposing database operations:
 
 ### Step 3: Configure Copilot Studio
 
-#### A. Create Actions for Each Function
+**Choose your integration method:**
+
+- **🚀 Recommended: Custom Connector** - Import the OpenAPI spec for automatic configuration of all 18+ operations
+  - Follow the complete guide: [CUSTOM_CONNECTOR_GUIDE.md](CUSTOM_CONNECTOR_GUIDE.md)
+  - Faster setup, less manual work
+  - All operations pre-configured with proper schemas
+
+- **⚙️ Manual Setup: Individual Actions** - Create each action manually
+  - Follow the complete guide: [COPILOT_STUDIO_SETUP.md](COPILOT_STUDIO_SETUP.md)
+  - More control over each operation
+  - Good for learning or customizing specific operations
+
+#### Quick Example: Manual Action Setup
+
+If you choose manual setup, here's an example:
 
 1. **Go to Copilot Studio** → Your Agent → **Actions** → **Add Action**
 
