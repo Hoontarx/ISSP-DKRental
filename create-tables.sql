@@ -121,7 +121,7 @@ CREATE TABLE pm.TENANCY
 GO
 CREATE TABLE pm.TENANT
 (
-    tenancy_id INT,
+    tenancy_id INT NULL,
     tenant_id INT IDENTITY(1,1) PRIMARY KEY,  
     first_name NVARCHAR(100) NOT NULL,
     last_name NVARCHAR(100) NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE pm.TENANT
     email NVARCHAR(150) NULL
 
     CONSTRAINT FK_TENANCY_TENANT FOREIGN KEY (tenancy_id)
-    REFERENCES pm.TENANCY (tenancy_id),
+    REFERENCES pm.TENANCY (tenancy_id)
 );
 GO
 
@@ -449,7 +449,8 @@ CREATE TABLE pm.UTILITY_SPLIT
 -- ==============================================================
 
 CREATE TABLE pm.MOVE_TYPE (
-    move_type_id INT IDENTITY(1,1) PRIMARY KEY
+    move_type_id INT IDENTITY(1,1) PRIMARY KEY,
+    move_type NVARCHAR(20)
 );
 
 
@@ -459,14 +460,14 @@ CREATE TABLE pm.MOVE (
     tenancy_id INT NOT NULL,
     move_date DATE,
     tenant_availability NVARCHAR(50),
-    proposed_date_tbc BIT,
-    confirmed_with_david BIT,
+    proposed_date_tbc NVARCHAR(50),
+    confirmed_with_david NVARCHAR(50),
     status NVARCHAR(50),
-    notify_back_office BIT,
-    security_release BIT,
-    move_out_letter BIT,
-    move_in_orientation BIT,
-    form_k BIT,
+    notify_back_office NVARCHAR(50),
+    security_release NVARCHAR(50),
+    move_out_letter NVARCHAR(50),
+    move_in_orientation NVARCHAR(50),
+    form_k NVARCHAR(50),
     zinspector NVARCHAR(100),
     FOREIGN KEY (move_type_id) REFERENCES pm.MOVE_TYPE(move_type_id),
     FOREIGN KEY (tenancy_id)   REFERENCES pm.TENANCY(tenancy_id)
@@ -544,9 +545,10 @@ CREATE TABLE pm.BC_SPECULATION_NOTICES (
     owner_first_name NVARCHAR(255),
     owner_last_name  NVARCHAR(255),
     owner_email NVARCHAR(255),
+    company_name NVARCHAR(100),
     notice NVARCHAR(500) NULL, -- can be NULL or hold notes
     year_of_notice INT NOT NULL,
-    CONSTRAINT UQ_NOTICE UNIQUE (notice, year_of_notice),
+    CONSTRAINT UQ_NOTICE UNIQUE (property_id,notice, year_of_notice),
     FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
