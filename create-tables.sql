@@ -339,16 +339,16 @@ GO
 CREATE TABLE pm.CONTRACTORS  
 (  
     contractor_id INT IDENTITY(1,1) PRIMARY KEY,  
-    company_name NVARCHAR(150),  
-    contact_name NVARCHAR(100),  
-    contact_number NVARCHAR(50),  
+    company_name NVARCHAR(255),  
+    contact_name NVARCHAR(255),  
+    contact_number NVARCHAR(255),  
     email NVARCHAR(255),  
     services_provided NVARCHAR(255),  
-    specialization NVARCHAR(100),  
+    specialization NVARCHAR(255),  
     notes NVARCHAR(255)  
 );  
 GO  
-  
+
 -- ==============================================================  
 -- 8) MAINTENANCE  
 -- ==============================================================  
@@ -357,7 +357,7 @@ CREATE TABLE pm.MAINTENANCE
 (  
     maintenance_id INT IDENTITY(1,1) PRIMARY KEY,  
     property_id INT NOT NULL,  
-    contractor_id INT NOT NULL,  
+    contractor_id INT NULL,  
     description NVARCHAR(255),  
     action_plan NVARCHAR(255),  
     status NVARCHAR(50),  
@@ -370,7 +370,7 @@ CREATE TABLE pm.MAINTENANCE
         REFERENCES pm.CONTRACTORS(contractor_id)  
 );  
 GO  
-  
+
 CREATE INDEX IX_MAINTENANCE_PROPERTY_CONTRACTOR  
     ON pm.MAINTENANCE(property_id, contractor_id);  
 GO
@@ -458,7 +458,7 @@ CREATE TABLE pm.MOVE (
     move_id INT IDENTITY(1,1) PRIMARY KEY,
     move_type_id INT NOT NULL,
     tenancy_id INT NOT NULL,
-    move_date DATE,
+    move_date NVARCHAR(50),
     tenant_availability NVARCHAR(50),
     proposed_date_tbc NVARCHAR(50),
     confirmed_with_david NVARCHAR(50),
@@ -501,7 +501,7 @@ CREATE TABLE pm.STRATA_MANAGERS (
     strata_number NVARCHAR(50),
     strata_lot NVARCHAR(50),
     manager_name NVARCHAR(100),
-    contact_number NVARCHAR(50),
+    contact_number NVARCHAR(70),
     email NVARCHAR(255),
     FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
@@ -530,11 +530,8 @@ CREATE TABLE pm.KEYS_FOBS_BUZZER (
 CREATE TABLE pm.BC_ASSESSMENTS (
     assessment_id INT IDENTITY(1,1) PRIMARY KEY,
     property_id INT NOT NULL,
-    building_no NVARCHAR(50) NOT NULL,
-    unit_number NVARCHAR(50) NOT NULL,
     [year] INT NOT NULL,
-    assessed_value DECIMAL(12,2),
-    CONSTRAINT UQ_BC_Assessments UNIQUE (building_no, unit_number, [year]),
+    assessed_value NVARCHAR(50)
     FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
@@ -554,13 +551,12 @@ CREATE TABLE pm.BC_SPECULATION_NOTICES (
 );
 
 
-
 CREATE TABLE pm.TAXES (
     tax_id INT IDENTITY(1,1) PRIMARY KEY,
     property_id INT NOT NULL,
-    municipal_eht DECIMAL(10,2),
-    bc_speculation_tax DECIMAL(10,2),
-    federal_uht DECIMAL(10,2),
+    municipal_eht NVARCHAR(50),
+    bc_speculation_tax NVARCHAR(50),
+    federal_uht NVARCHAR(50),
     FOREIGN KEY (property_id) REFERENCES pm.PROPERTIES(property_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );

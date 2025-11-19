@@ -721,12 +721,11 @@ SELECT DISTINCT
 FROM dbo.Temp_Move_In_Out AS tp
 JOIN pm.properties AS p
     ON p.building_no = tp.Building_Code
-   AND p.unit_number = tp.Building_No
 JOIN pm.TENANCY AS t
     ON t.property_id = p.property_id
 JOIN pm.MOVE_TYPE AS m
-    ON m.move_type = tp.move_type;  
-
+    ON m.move_type = tp.move_type  
+WHERE tp.Move_Out_InDate IS NOT NULL;
 --- RENT INSERTION----
 
 INSERT INTO pm.RENT (
@@ -1005,9 +1004,180 @@ WHERE n.notice_text IS NOT NULL;
 
 
 
---- INSERTION----
---- INSERTION----
---- INSERTION----
---- INSERTION----
---- INSERTION----
---- INSERTION----
+--- Strata Manager INSERTION----
+
+INSERT INTO pm.STRATA_MANAGERS (
+    property_id,
+    strata_number,
+    strata_lot,
+    manager_name,
+    contact_number,
+    email
+)
+SELECT DISTINCT
+    p.property_id,
+    t.STRATA_NO,
+    t.STRATA_LOT,
+    t.Strata_Manager_Name,
+    t.Strata_Manager_Contact_Number,
+    t.Strata_Manager_Contact_email
+FROM dbo.Temp_B_Properties AS t
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.Strata_Manager_Name IS NOT NULL;
+
+
+--- Taxes INSERTION----
+
+INSERT INTO pm.TAXES (
+    property_id,
+    municipal_eht,
+    bc_speculation_tax,
+    federal_uht
+)
+SELECT DISTINCT
+    p.property_id,
+    t.Municipal_COV_EHT_Due_February_2nd AS municipal_eht,
+    t.Province_of_BC_Speculation_Vacancy_Tax_Due_March_31St AS bc_speculation_tax,
+    t.Federal_Government_Underused_Housing_Tax_UHT_return_Due_April_30th AS federal_uht
+FROM dbo.Temp_Taxes AS t
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.Municipal_COV_EHT_Due_February_2nd IS NOT NULL
+   OR t.Province_of_BC_Speculation_Vacancy_Tax_Due_March_31St IS NOT NULL
+   OR t.Federal_Government_Underused_Housing_Tax_UHT_return_Due_April_30th IS NOT NULL;
+
+
+--- Contractors & Maintanace INSERTION----
+
+INSERT INTO pm.CONTRACTORS (
+    company_name,
+    contact_name,
+    contact_number,
+    email,
+    services_provided,
+    notes
+)
+SELECT DISTINCT
+    t.Contractor_Company,
+    t.Name_of_Contact,
+    t.Contact_Number,
+    t.Email,
+    t.Services_Provided,
+    t.Notes
+FROM dbo.Temp_Lists_of_Contractors AS t
+WHERE t.Contractor_Company IS NOT NULL;
+
+INSERT INTO pm.MAINTENANCE (
+    property_id,
+    description
+)
+SELECT DISTINCT
+    p.property_id,
+    t.repairs_maintenance
+FROM dbo.Temp_B_Properties AS t
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = t.building_no
+   AND p.unit_number = t.unit_number
+WHERE t.repairs_maintenance IS NOT NULL;
+
+
+--- Building Manager INSERTION----
+
+
+INSERT INTO pm.BUILDING_MANAGERS (
+    property_id,
+    name,
+    phone,
+    email,
+    concierge_desk,
+    concierge_phone,
+    concierge_email
+)
+SELECT DISTINCT
+    p.property_id,
+    b.[Building_Manager_Caretaker_Name],
+    b.Phone_No,
+    b.Email_Address,
+    b.Concierge_Desk,
+    b.Concierge_Phone_No,
+    b.Concierge_Email_Address
+FROM dbo.Temp_B_Properties AS b
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = b.building_no
+   AND p.unit_number = b.unit_number
+WHERE b.Building_Manager_Caretaker_Name IS NOT NULL
+   OR b.Concierge_Desk IS NOT NULL;
+
+
+
+--- Keys & FOB INSERTION----
+
+INSERT INTO pm.KEYS_FOBS_BUZZER (
+    property_id,
+    keys,
+    fobs,
+    buzzer_no
+)
+SELECT DISTINCT
+    p.property_id,
+    t.Keys,
+    t.FOB_s,
+    t.BUZZER_NO
+FROM dbo.Temp_B_Properties AS t
+JOIN pm.PROPERTIES AS p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.Keys IS NOT NULL
+   OR t.FOB_s IS NOT NULL
+   OR t.BUZZER_NO IS NOT NULL;
+
+
+--- BC ASSESSMENT INSERTION----
+
+INSERT INTO pm.BC_ASSESSMENTS (
+    property_id,
+    year,
+    assessed_value
+)
+SELECT p.property_id, 2021, t.BC_Assessment_2021
+FROM dbo.Temp_B_Properties t
+JOIN pm.PROPERTIES p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.BC_Assessment_2021 IS NOT NULL
+
+UNION ALL
+SELECT p.property_id, 2022, t.BC_Assessment_2022
+FROM dbo.Temp_B_Properties t
+JOIN pm.PROPERTIES p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.BC_Assessment_2022 IS NOT NULL
+
+UNION ALL
+SELECT p.property_id, 2023, t.BC_Assessment_2023
+FROM dbo.Temp_B_Properties t
+JOIN pm.PROPERTIES p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.BC_Assessment_2023 IS NOT NULL
+
+UNION ALL
+SELECT p.property_id, 2024, t.BC_Assessment_2024
+FROM dbo.Temp_B_Properties t
+JOIN pm.PROPERTIES p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.BC_Assessment_2024 IS NOT NULL
+
+UNION ALL
+SELECT p.property_id, 2025, t.BC_Assessment_2025
+FROM dbo.Temp_B_Properties t
+JOIN pm.PROPERTIES p
+    ON p.building_no = t.Building_No
+   AND p.unit_number = t.UNIT_NUMBER
+WHERE t.BC_Assessment_2025 IS NOT NULL;
+

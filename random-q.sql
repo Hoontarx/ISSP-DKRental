@@ -1,1 +1,1 @@
-DROP TABLE pm.BC_SPECULATION_NOTICES;
+SELECT * FROM dbo.Temp_B_Properties;
